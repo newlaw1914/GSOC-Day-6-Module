@@ -1,0 +1,1114 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GSOC-TRN-D6 · Verification seeing and saying what is there</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;500;700&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap');
+
+:root{
+  --ink:#0A0C12;
+  --panel:#141822;
+  --panel-2:#1C2230;
+  --line:#2A3242;
+  --line-soft:#1F2633;
+  --bone:#E8EAEF;
+  --muted:#92989B;
+  --prism:#512FFF;
+  --prism-deep:#3F1DF8;
+  --crimson:#C8283C;
+  --amber:#F0B429;
+  --green:#4FBF8B;
+  --display:"Oswald","Arial Narrow",Haettenschweiler,Impact,sans-serif;
+  --body:"Spectral",Iowan Old Style,"Palatino Linotype",Georgia,serif;
+  --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ink);
+  background-image:radial-gradient(rgba(255,255,255,.04) 1px, transparent 1px);
+  background-size:7px 7px;
+  color:var(--bone);
+  font-family:var(--body);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 18px 90px}
+
+/* ---------- masthead ---------- */
+header.mast{border-bottom:2px solid var(--line);padding:34px 0 20px;margin-bottom:6px}
+.filetag{
+  font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--muted);display:flex;flex-wrap:wrap;gap:14px;align-items:center;
+}
+.filetag b{color:var(--prism);font-weight:500}
+.trio{width:22px;height:20px;flex:0 0 auto;stroke:var(--prism);fill:none}
+h1.title{
+  font-family:var(--display);font-weight:700;text-transform:uppercase;
+  font-size:clamp(34px,7.4vw,70px);line-height:.94;letter-spacing:-.01em;margin:14px 0 6px;
+}
+h1.title .a{color:var(--prism)}
+h1.title .tagbox{
+  display:inline-block;font-size:.34em;vertical-align:middle;
+  color:var(--ink);background:var(--bone);padding:2px 9px;margin:0 10px 0 0;transform:rotate(-4deg);
+}
+.dek{color:var(--muted);max-width:66ch;font-size:15px}
+.srcline{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--muted);margin-top:12px}
+.srcline b{color:var(--bone);font-weight:500}
+
+/* ---------- nav ---------- */
+nav.tabs{
+  position:sticky;top:0;z-index:40;background:rgba(10,12,18,.94);
+  backdrop-filter:blur(6px);border-bottom:1px solid var(--line);
+  display:flex;gap:2px;overflow-x:auto;margin:0 -18px 26px;padding:0 18px;scrollbar-width:none;
+}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{
+  flex:0 0 auto;background:none;border:0;border-bottom:3px solid transparent;
+  color:var(--muted);font-family:var(--display);text-transform:uppercase;
+  letter-spacing:.12em;font-size:13px;font-weight:500;padding:16px 14px;cursor:pointer;
+}
+nav.tabs button:hover{color:var(--bone)}
+nav.tabs button[aria-selected="true"]{color:var(--bone);border-bottom-color:var(--prism)}
+nav.tabs button .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-left:7px;opacity:0;transition:opacity .2s}
+nav.tabs button.done .dot{opacity:1}
+
+/* ---------- progress ---------- */
+.progress{display:flex;align-items:center;gap:12px;margin:0 0 28px;font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+.bar{flex:1;height:6px;background:var(--panel-2);position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,var(--prism-deep),var(--prism));transition:width .45s ease}
+
+/* ---------- generic ---------- */
+section.view{display:none;animation:fade .3s ease}
+section.view.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h2{font-family:var(--display);text-transform:uppercase;letter-spacing:.04em;font-size:clamp(24px,4vw,34px);font-weight:700;margin:0 0 4px}
+h3{font-family:var(--display);text-transform:uppercase;letter-spacing:.08em;font-size:17px;font-weight:500;margin:34px 0 12px;color:var(--bone)}
+.sub{color:var(--muted);font-size:14px;margin:0 0 24px;max-width:70ch}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--prism)}
+.eyebrow.alt{color:var(--amber)}
+.panel{background:var(--panel);border:1px solid var(--line);padding:20px}
+.hint{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.btn{font-family:var(--display);text-transform:uppercase;letter-spacing:.12em;font-size:13px;background:var(--bone);color:var(--ink);border:0;padding:11px 20px;cursor:pointer;font-weight:500}
+.btn:hover{background:var(--prism);color:#fff}
+.btn.ghost{background:none;color:var(--bone);border:1px solid var(--line)}
+.btn.ghost:hover{background:var(--panel-2);color:var(--bone)}
+.btn.danger:hover{background:var(--crimson);color:#fff}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+input[type=text]{background:var(--panel-2);border:1px solid var(--line);color:var(--bone);padding:10px 12px;font-family:var(--mono);font-size:13px;min-width:0}
+input[type=text]:focus{outline:2px solid var(--prism);outline-offset:1px}
+:focus-visible{outline:2px solid var(--prism);outline-offset:2px}
+.sopref{font-family:var(--mono);font-size:.86em;color:var(--prism);white-space:nowrap}
+.ctrl{border-left:3px solid var(--prism);background:var(--panel-2);padding:14px 16px;margin:18px 0}
+.ctrl .lab{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--prism);display:block;margin-bottom:6px}
+.ctrl p{margin:0;font-size:15px}
+
+/* ---------- ledger ---------- */
+.ledger{border-top:1px solid var(--line)}
+.row{border-bottom:1px solid var(--line);padding:14px 0}
+.row .label{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cell{padding:12px 14px;background:var(--panel);border-left:3px solid var(--prism);font-size:15px}
+.cell.b{border-left-color:var(--muted)}
+.cell.b.neg{border-left-color:var(--crimson)}
+.cell .who{font-family:var(--display);text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--prism);display:block;margin-bottom:5px}
+.cell.b .who{color:var(--muted)}
+.cell.b.neg .who{color:var(--crimson)}
+.reveal{cursor:pointer;position:relative}
+.reveal .masked{color:transparent;background:var(--panel-2);user-select:none}
+.reveal .masked::after{content:"tap to reveal";position:absolute;inset:auto 14px 12px;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.reveal.open{cursor:default}
+
+/* ---------- gallery ---------- */
+.side-switch{display:flex;gap:0;margin:0 0 22px;border:1px solid var(--line);width:max-content;max-width:100%;flex-wrap:wrap}
+.side-switch button{background:none;border:0;color:var(--muted);font-family:var(--display);text-transform:uppercase;letter-spacing:.14em;font-size:12px;padding:12px 22px;cursor:pointer}
+.side-switch button.on{background:var(--prism);color:#fff}
+.side-switch button.on.alt{background:var(--amber);color:var(--ink)}
+.dossiers{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--prism);padding:16px;cursor:pointer;transition:transform .18s ease,border-color .18s}
+.card.alt{border-top-color:var(--amber)}
+.card:hover{transform:translateY(-3px);border-color:var(--muted)}
+.card .no{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.2em}
+.card .nm{font-family:var(--display);text-transform:uppercase;font-size:21px;font-weight:700;line-height:1.08;margin:6px 0 2px}
+.card .real{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em}
+.card .teaser{font-size:14px;color:var(--muted);margin-top:10px}
+.card .more{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--prism);margin-top:12px;display:block}
+.card.alt .more{color:var(--amber)}
+.card.read{border-color:var(--green)}
+
+.scrim{position:fixed;inset:0;background:rgba(4,5,9,.84);display:none;z-index:80;overflow-y:auto;padding:24px 14px}
+.scrim.on{display:block}
+.dossier{max-width:660px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-top:5px solid var(--prism);padding:24px;position:relative}
+.dossier.alt{border-top-color:var(--amber)}
+.dossier h4{font-family:var(--display);text-transform:uppercase;font-size:30px;margin:8px 0 2px;font-weight:700;line-height:1.02}
+.dossier .close{position:absolute;top:12px;right:12px;background:none;border:1px solid var(--line);color:var(--muted);width:34px;height:34px;cursor:pointer;font-size:18px;line-height:1}
+.dossier .close:hover{color:var(--bone);border-color:var(--bone)}
+.field{border-top:1px solid var(--line);padding:12px 0}
+.field .k{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.field .v{font-size:15px}
+.flap{margin-top:14px;border:1px dashed var(--line);padding:14px;cursor:pointer;background:var(--panel-2)}
+.flap .k{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--prism)}
+.flap .body{display:none;margin-top:8px;font-size:15px}
+.flap.open{border-style:solid;cursor:default}
+.flap.open .body{display:block}
+
+/* ---------- sort ---------- */
+.dnd-pool{display:flex;flex-wrap:wrap;gap:9px;min-height:56px;padding:14px;background:var(--panel);border:1px dashed var(--line);margin-bottom:18px}
+.chip{background:var(--panel-2);border:1px solid var(--line);padding:9px 13px;cursor:grab;font-family:var(--display);text-transform:uppercase;letter-spacing:.08em;font-size:13px;user-select:none;max-width:100%}
+.chip:active{cursor:grabbing}
+.chip.picked{outline:2px solid var(--prism);outline-offset:2px}
+.chip.right{border-color:var(--green);color:var(--green)}
+.chip.wrong{border-color:var(--crimson);color:var(--crimson)}
+.bins{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.bin{background:var(--panel);border:2px dashed var(--line);padding:14px;min-height:150px}
+.bin.over{border-color:var(--prism);background:var(--panel-2)}
+.bin h5{font-family:var(--display);text-transform:uppercase;letter-spacing:.14em;font-size:13px;margin:0 0 4px;color:var(--prism)}
+.bin .bsub{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted);margin-bottom:12px;text-transform:uppercase}
+.bin .drop{display:flex;flex-wrap:wrap;gap:9px}
+.feedback{margin-top:16px;padding:14px;border-left:3px solid var(--prism);background:var(--panel);font-size:15px;display:none}
+.feedback.on{display:block}
+.feedback.good{border-left-color:var(--green)}
+.feedback.bad{border-left-color:var(--crimson)}
+
+/* ---------- scenarios ---------- */
+.scen-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.scen-pick .card .nm{font-size:19px}
+.node{background:var(--panel);border:1px solid var(--line);padding:22px;margin-top:18px}
+.node .stage{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.node p.text{font-size:16px;margin:12px 0 20px}
+.choices{display:grid;gap:10px}
+.choice{text-align:left;background:var(--panel-2);border:1px solid var(--line);color:var(--bone);padding:14px 16px;cursor:pointer;font-family:var(--body);font-size:15px;line-height:1.45}
+.choice:hover{border-color:var(--prism)}
+.outcome{border-left:4px solid var(--amber);padding:18px;background:var(--panel-2);margin-top:16px}
+.outcome .verdict{font-family:var(--display);text-transform:uppercase;letter-spacing:.14em;font-size:15px;margin-bottom:8px;color:var(--amber)}
+.outcome.win{border-left-color:var(--green)}
+.outcome.win .verdict{color:var(--green)}
+.outcome.loss{border-left-color:var(--crimson)}
+.outcome.loss .verdict{color:var(--crimson)}
+.trail{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:14px;letter-spacing:.06em}
+
+/* ---------- quiz ---------- */
+.qhead{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:18px}
+.qhead .n{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
+.qtext{font-size:19px;line-height:1.4;margin:0 0 18px}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;background:var(--panel);border:1px solid var(--line);color:var(--bone);padding:14px 16px;cursor:pointer;font-family:var(--body);font-size:15px;display:flex;gap:12px;align-items:flex-start}
+.opt:hover:not(:disabled){border-color:var(--prism)}
+.opt .ltr{font-family:var(--mono);font-size:12px;color:var(--muted);flex:0 0 auto;padding-top:2px}
+.opt.correct{border-color:var(--green);background:rgba(79,191,139,.09)}
+.opt.chosen-wrong{border-color:var(--crimson);background:rgba(200,40,60,.09)}
+.opt:disabled{cursor:default;opacity:.75}
+.opt.correct:disabled,.opt.chosen-wrong:disabled{opacity:1}
+.rationale{margin-top:14px;padding:16px;background:var(--panel-2);border-left:3px solid var(--muted);display:none}
+.rationale.on{display:block}
+.rationale .tag{font-family:var(--display);text-transform:uppercase;letter-spacing:.14em;font-size:13px;margin-bottom:8px}
+.rationale.right{border-left-color:var(--green)}
+.rationale.right .tag{color:var(--green)}
+.rationale.wrong{border-left-color:var(--crimson)}
+.rationale.wrong .tag{color:var(--crimson)}
+.rationale .why{font-size:15px;margin-bottom:10px}
+.rationale .miss{font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+.rationale .miss b{color:var(--bone);font-weight:600}
+.stamp{display:inline-block;border:3px solid var(--green);color:var(--green);font-family:var(--display);text-transform:uppercase;letter-spacing:.2em;font-size:22px;padding:8px 18px;transform:rotate(-6deg);margin:10px 0}
+.stamp.fail{border-color:var(--crimson);color:var(--crimson)}
+.scorewrap{text-align:center;padding:30px 10px}
+.bigscore{font-family:var(--display);font-size:64px;line-height:1;font-weight:700}
+
+/* ---------- records ---------- */
+table.rec{width:100%;border-collapse:collapse;font-size:14px}
+table.rec th{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.rec td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+table.rec tr:hover td{background:var(--panel)}
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px}
+.stat{background:var(--panel);border:1px solid var(--line);padding:14px}
+.stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-family:var(--display);font-size:30px;line-height:1.1;margin-top:4px}
+.qbars{display:grid;gap:8px}
+.qbar{display:grid;grid-template-columns:1fr 68px;gap:12px;align-items:center;font-size:13px}
+.qbar .track{height:20px;background:var(--panel-2);position:relative}
+.qbar .track i{position:absolute;inset:0 auto 0 0}
+.qbar .track span{position:absolute;left:8px;top:0;line-height:20px;font-size:12px;color:var(--bone)}
+.qbar .pct{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:20px}
+textarea.csv{width:100%;height:170px;background:var(--panel-2);border:1px solid var(--line);color:var(--bone);font-family:var(--mono);font-size:11px;padding:12px;display:none}
+textarea.csv.on{display:block}
+.note{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.7;letter-spacing:.04em}
+label.check{display:flex;gap:8px;align-items:center;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer}
+footer.src{margin-top:60px;border-top:1px solid var(--line);padding-top:18px}
+
+.resume{display:none;border:1px solid var(--prism);border-left-width:4px;background:var(--panel);padding:14px 16px;margin:-8px 0 26px;align-items:center;gap:14px;flex-wrap:wrap}
+.resume.on{display:flex}
+.resume .t{flex:1;min-width:230px;font-size:15px}
+.resume .t b{font-family:var(--display);text-transform:uppercase;letter-spacing:.1em;font-size:13px;display:block;color:var(--prism);margin-bottom:4px}
+#savedAt{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted);white-space:nowrap}
+.resumebar{border:1px dashed var(--prism);background:var(--panel-2);padding:14px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+
+@media (max-width:640px){
+  .cols{grid-template-columns:1fr}
+  .dossiers{grid-template-columns:1fr}
+  h1.title .tagbox{display:block;width:max-content;margin:0 0 8px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+<header class="mast">
+  <div class="filetag">
+    <svg class="trio" viewBox="0 0 100 92" aria-hidden="true"><path d="M50 11 L89 79 L11 79 Z" stroke-width="16" stroke-linejoin="round"/></svg>
+    <span>Specialized GSOC</span>
+    <span>Module <b id="mcode"></b></span>
+    <span id="mtag"></span>
+    <span id="mest"></span>
+  </div>
+  <h1 class="title" id="mtitle"></h1>
+  <p class="dek" id="mdek"></p>
+  <p class="srcline" id="msrc"></p>
+</header>
+
+<nav class="tabs" role="tablist" id="tabs"></nav>
+
+<div class="progress">
+  <span>Progress</span>
+  <div class="bar"><i id="pbar"></i></div>
+  <span id="ptext">0%</span>
+  <span id="savedAt"></span>
+</div>
+
+<div class="resume" id="resume"></div>
+
+<section class="view" id="v-brief"></section>
+<section class="view" id="v-ledger"></section>
+<section class="view" id="v-gallery"></section>
+<section class="view" id="v-sort"></section>
+<section class="view" id="v-field"></section>
+<section class="view" id="v-quiz"></section>
+<section class="view" id="v-records"></section>
+
+<footer class="src">
+  <p class="note" id="mfoot"></p>
+</footer>
+</div>
+
+<div class="scrim" id="scrim"><div class="dossier" id="dossier"></div></div>
+<script>
+/* ============================ SPEC ============================ */
+const SPEC = {"id":"d6","code":"GSOC-TRN-D6","caseTag":"Day 6 of 10","est":"50 min","dayBox":"Day 6","title":["Verification","seeing and saying what is there"],"accentLine":1,"dek":"One decision point carries dispatch, escalation, client cost, officer safety and the credibility of the GSOC. Today is about looking properly and then writing down only what you actually saw. Work through it in any order. It saves itself as you go.","sources":"SOP-GSOC-007 · SOP-GSOC-001 step 6.2 · SOP-GSOC-008 · SOP-GSOC-015","certRef":"<span class=\"sopref\">SOP-GSOC-002</span>","qaRef":"<span class=\"sopref\">SOP-GSOC-015</span>","foot":"Module GSOC-TRN-D6, v0.1 draft, internal and operational. This is a training aid, not a controlled procedure. Where this module and a controlled SOP disagree, the SOP wins, every time. Program values that are not yet ratified appear as [CONFIRM] and are never scored.","brief":{"head":"Verify facts, not assumptions","sub":"Six parts, any order, no time limit. The guiding line is one sentence long and most of a shift consists of applying it under time pressure with a poor camera angle.","control":"Where verification is inconclusive and a life-safety outcome is plausible, you escalate as if it were a life-safety event. Over-escalation is recoverable. Under-escalation is not. <span class=\"sopref\">SOP-GSOC-007</span>.","parts":[["Write this, not this","Ten pairs. A defensible line and the version that gets torn apart. One side of each pair is hidden until you tap it."],["The file on verification","Ten cards. The four outcomes, and the six ways verification goes wrong, each with a sealed section."],["Observation or inference","Twelve statements, two files. Decide which ones you actually saw. This is the drill that transfers straight into the record."],["Field test","Three alerts where the honest answer and the comfortable answer are different."],["Assessment","Twelve questions with a written justification for the right answer and for whichever wrong one you picked."],["Records","Every attempt, per-question accuracy, and a CSV for the competency record."]],"anchors":{"head":"The three lines that decide everything today","items":["<b>You may record that a subject is carrying an elongated object and describe it.</b> You may not record that a subject is carrying a weapon unless the object is clearly identifiable as one. That distinction determines what emergency services are told and what a responding officer expects to encounter.","<b>There are exactly three dispositions.</b> Non-actionable false alert, actionable non-life-safety, actionable life-safety. Unresolved is a trigger for Level 2, not a fourth category.","<b>\"False alarm\" is not a cause.</b> \"Vegetation movement in wind, camera 3 field of view\" is. The false-alert ratio KPI and every detection tuning decision depend on the specific version."]},"cta":"Start with the pairs"},"ledger":{"tab":"Write this, not this","head":"Write this, not this","sub":"Each row is the same observation written two ways. One version survives being read out loud by somebody who was not there. One side is hidden and the side alternates, so decide what the other half says before you tap it.","colA":"Defensible","colB":"Not defensible","negB":true,"cta":"On to the cards","rows":[{"label":"Entry","a":"Two subjects entered the yard through the northeast gate at 02:14 and approached the equipment row.","b":"A couple of guys broke in and were clearly going for the equipment."},{"label":"An object","a":"Subject carried an elongated object approximately 60cm in length. The object was not identifiable from the available view.","b":"Subject was armed."},{"label":"Contact attempts","a":"Officer contacted at 02:16, no answer. Second attempt 02:18, no answer. Escalated to Supervisor 02:19.","b":"Could not reach the officer so escalated."},{"label":"Departure","a":"Subjects departed westbound on foot at 02:31. No property loss observed.","b":"They ran off. Nothing seemed to be taken."},{"label":"A false alert","a":"Vegetation movement in wind, camera 3 field of view. No subject present on any camera covering the area.","b":"False alarm."},{"label":"A vehicle","a":"Dark blue panel van, no visible livery, parked facing the gate on the north side of the road from 02:48. Plate not legible from the available view.","b":"Suspicious van, plate probably ending 47, parked like it was waiting for someone."},{"label":"Authorization","a":"Two subjects in high-visibility vests unloading from a marked vehicle at 04:05. Activity matches the documented contractor pattern for this site in the site profile.","b":"Looked like contractors, so no action taken."},{"label":"A person on the ground","a":"Subject on the ground near the side entrance from 03:01, no observable movement for four minutes. View is partially obscured and the cause is not determinable from this angle.","b":"Person passed out drunk by the side door."},{"label":"Source of a fact","a":"Officer advised on arrival that the rear door lock was damaged. Damage not visible from any available camera.","b":"Rear door lock was damaged."},{"label":"Intent","a":"Subject approached the cab of the third vehicle in the row, remained beside the driver door for approximately 40 seconds, then moved to the fourth vehicle.","b":"Subject was trying the doors looking for one that was unlocked."}]},"gallery":{"tab":"The file","head":"The file on verification","sub":"Two files. The four outcomes an alert can have, and the six ways verification goes wrong in practice. Every one of the six looks like efficiency from the inside. The bottom of each card is sealed until you ask for it.","note":"Read all ten and this section marks complete. The verification sequence itself is in 007, the classification is step 6.2 of 001, and the narrative standard it feeds is 008, which is Day 9.","cta":"Go to the drill","files":[{"key":"outcomes","label":"The four outcomes","items":[{"id":"o1","name":"Non-actionable","real":"Log and close · record the specific cause","teaser":"Environmental, wildlife, weather, or authorized activity. No security relevance.","fields":[["Definition","Environmental, wildlife, weather, or authorized activity. Nothing of security relevance is happening."],["What it still requires","The record, the classification, the reasoning, and the specific cause. The cause is the part people skip."],["Why the cause matters","The false-alert ratio KPI and its cause distribution drive detection tuning. \"False alarm\" as a cause tells the Platform SME nothing and tells QA that you did not look properly."],["The authorization test","Does this activity match a documented legitimate pattern for this site, at this hour? Documented patterns live in the site profile, not in operator memory."]],"sealedLabel":"what a good non-actionable record looks like","sealed":"Name the trigger source, the camera, and what you confirmed it was not. \"Vegetation movement in wind, camera 3 field of view, no subject present on any camera covering that approach\" is complete: it says what fired, what caused it, and that you checked the alternative. That record can be read a year later by somebody deciding whether to retune that zone."},{"id":"o2","name":"Actionable, non-life-safety","real":"Route to SOP-GSOC-010 dispatch","teaser":"Verified unauthorized presence or activity, nobody in immediate danger.","fields":[["Definition","Verified unauthorized presence or activity with no immediate threat to any person."],["What follows","Dispatch under <span class=\"sopref\">SOP-GSOC-010</span>, with the brief in its order: site and precise location, nature, number of subjects, whether a weapon has been observed, direction of travel, hazards."],["What stays with you","Live observation through the response, updating the officer as subjects move. You are their eyes on the wider scene."],["The trap","Deciding a departing subject is no longer actionable. Verified unauthorized presence is actionable whether or not they are on their way out, and the record is what puts the site on a watch list."]],"sealedLabel":"the line between this and life safety","sealed":"The question is a threat to a person, not the value of the property. Someone stripping copper from an empty yard at 03:00 is this category. The same person swinging a tool at another person is not, and the reclassification happens the instant it changes, with the Level 5 running in parallel rather than after the dispatch finishes."},{"id":"o3","name":"Actionable, life-safety","real":"SOP-GSOC-011 immediately, in parallel with dispatch","teaser":"Threat to life or of serious bodily harm. The one with the word immediately in it.","fields":[["Definition","Violence, a weapon, fire, a medical emergency, a person in distress. Threat to life or of serious bodily harm."],["What follows","Emergency services without delay. No supervisor approval first, no waiting for dispatch to complete, no further verification. Supervisor and client notified in parallel."],["The measured part","Time from life-safety classification to emergency services contacted is described in the manual as the most consequential metric in it."],["The description discipline","Escalate on plausibility, describe on observation. You escalate because a life-safety outcome is plausible. You describe only what is actually identifiable."]],"sealedLabel":"what you tell them and what you do not","sealed":"Full street address first, then the location within the site and the best access point. Nature in plain language. Subjects in objective terms. Whether a weapon has been observed, stated explicitly even when it has not. Injuries. That you are a remote operator watching by camera. A callback number answered for the duration. What you never do is upgrade an unidentified object into a weapon to make them take it seriously. <span class=\"sopref\">SOP-GSOC-011</span>."},{"id":"o4","name":"Unresolved","real":"Not a disposition · a trigger","teaser":"Cannot be classified from the available view. That is an escalation, not an answer.","fields":[["Definition","The event cannot be classified from the available view. It is explicitly not a disposition."],["What it triggers","Level 2 escalation for a supervisor determination. Rate of unresolved classifications escalated to Level 2 is tracked as a KPI in 007."],["Where it applies","Inconclusive live view with no useful recorded segment, a camera covering the wrong angle, an obscured view, or a scene you genuinely cannot read."],["The override","If a life-safety outcome is plausible, it stops being an unresolved Level 2 and becomes a Level 5. Plausibility, not certainty, is the threshold."]],"sealedLabel":"why the fourth box exists at all","sealed":"Because without it, unclear gets rounded to the nearest comfortable answer, and the nearest comfortable answer is almost always non-actionable. Naming unresolved as a trigger removes the temptation to close something you did not understand. Asking for a second view is encouraged, is recorded, and is never treated as a deficiency."}]},{"key":"wrong","label":"Six ways it goes wrong","items":[{"id":"v1","name":"Inference as observation","real":"The one that ends up in a deposition","teaser":"\"Trying the doors\" instead of \"remained beside the driver door for 40 seconds\".","fields":[["What it looks like","A confident, readable narrative that describes what was obviously happening rather than what was visible."],["Why it happens","Inference is how people naturally describe scenes, and the inferred version is usually correct, which makes the habit feel harmless."],["What it costs","Every inferred line is a line somebody can dispute, and one disputed line makes the whole record arguable."],["The rule","State the source of every fact: directly observed, reported by the officer, advised by the client, or inferred. Never present inference as observation, and never characterize intent, motive or state of mind."]],"sealedLabel":"the test to apply to your own sentence","sealed":"Ask what a camera could have recorded. A camera can record a person standing beside a door for forty seconds. It cannot record them looking for an unlocked one. If the sentence needs a mind in it, it is inference, and it either gets rewritten or gets labelled as inference explicitly."},{"id":"v2","name":"The guessed plate","real":"One character, wrong vehicle, cannot be taken back","teaser":"Partially legible is a reason not to record it, not a reason to try.","fields":[["What it looks like","A heavy zoom, a plate that is almost readable, and a plausible reconstruction of the last two characters."],["Why it happens","A plate feels like the single most useful thing you can give anybody, so getting close feels better than nothing."],["What it costs","A guessed character puts the wrong vehicle, and possibly the wrong person, into a report that will be acted on."],["The rule","Capture plate detail only where it is legible. A partially guessed plate is worse than none."]],"sealedLabel":"what to record instead","sealed":"The vehicle, in objective detail: type, colour, distinguishing features, position, direction of travel, times present. That description is durable and defensible. If the plate matters, the clip is the evidence and a forensic review of the original may resolve it later. Your reconstruction never will."},{"id":"v3","name":"The single camera conclusion","real":"A verdict from one angle","teaser":"What you saw was real. It was also a third of what happened.","fields":[["What it looks like","A classification made from the camera that fired, without checking the cameras either side of it."],["Why it happens","The triggering camera shows the event, so it feels like the relevant view."],["What it costs","Direction of travel wrong, subject count wrong, and the approach missed. The approach is often the evidentially useful part."],["The rule","Review across multiple cameras where available to establish the full sequence and confirm direction of movement."]],"sealedLabel":"what the extra thirty seconds buys","sealed":"A subject count you can defend, a direction the officer can act on, and a capture that includes a margin before and after the event. Evidence capture covers the full event with a margin either side, because the approach is often more useful than the act itself."},{"id":"v4","name":"Complacency at a noisy site","real":"Specifically sampled by QA","teaser":"Eleven false alerts in a row, and the twelfth is real.","fields":[["What it looks like","A quick close on a site with a long false-alert history, because the pattern is well established and the queue is moving."],["Why it happens","Base rates are genuinely informative. This site really does produce false alerts, and that is why the shortcut feels rational."],["What it costs","The one in fifty. And a record showing a classification with no observation supporting it, on the site where QA is most likely to look."],["The rule","A site with a history of false alerts is not thereby exempt from verification. Complacency at a repeatedly-false site is a known failure mode and is specifically assessed in QA sampling."]],"sealedLabel":"how to use the history properly","sealed":"Documented non-event patterns live in the site profile and they are a triage input, not a disposition. The pattern tells you what to check against, not what to conclude. If the activity matches the documented pattern, say so and name the pattern. If it does not, the history is irrelevant to this alert."},{"id":"v5","name":"Classifying on the person","real":"Legal exposure and basic incompetence at once","teaser":"Behaviour is the basis. Nothing about the person is.","fields":[["What it looks like","A classification or a description that leans on how somebody looked rather than what they did."],["Why it happens","Fast pattern matching under time pressure, which is exactly the condition the rule is written for."],["What it costs","007 puts it plainly: it is a matter of both legal exposure and basic professional competence. It also produces worse verification, because it stops you looking at behaviour."],["The rule","Classify on observed behaviour only. Personal characteristics of a subject are never a basis for classification. Describe clothing and build only in objective, non-inferential terms."]],"sealedLabel":"what objective description sounds like","sealed":"Clothing by colour and type, build in neutral terms, and only what bears on identifying the same person across cameras. Then behaviour: where they went, what they touched, how long they stayed, which direction they left in. The behaviour is what makes the event actionable and the behaviour is what a responder can use."},{"id":"v6","name":"Touching the source","real":"Chain of custody breaks quietly","teaser":"Cropped to the useful bit, brightened so you can see it.","fields":[["What it looks like","A helpful clip. Trimmed, enhanced, maybe annotated with an arrow, attached to the record so the reader can see the point immediately."],["Why it happens","It genuinely does make the material easier to read, and the intention is to be useful."],["What it costs","A break in the chain of custody does not necessarily make material inadmissible, but it always makes it contestable, and it will be contested."],["The rule","Do not edit, crop, enhance or annotate source material. Preserve the original unaltered. All work is done on copies and every copy is marked as a copy."]],"sealedLabel":"what to do instead","sealed":"Capture or bookmark the segment covering the full event with a margin either side, record the clip reference in the incident record at the time of capture, and describe in words what you want the reader to notice. Every access to evidence is logged: who, when, what and why. <span class=\"sopref\">SOP-GSOC-018</span> is Day 9."}]}]},"sort":{"tab":"Observation or inference","head":"Observation or inference","sub":"Twelve lines from real-looking records. Some describe what a camera recorded. Some describe what somebody concluded. Put each one in the right file. Drag, or tap a line and then tap a file.","cta":"Skip ahead to the field test","win":"Twelve for twelve. Useful test to keep: could a camera have recorded this sentence. If it needs a mind in it, it is inference, and inference either gets rewritten or gets labelled as inference explicitly.","bins":[{"key":"obs","label":"Observation","sub":"A camera could record this"},{"key":"inf","label":"Inference","sub":"A conclusion about what it meant"}],"items":[{"name":"Two subjects at the northeast gate at 02:14","bin":"obs","why":"Observation. Count, location, time. All of it visible and all of it defensible."},{"name":"Subjects were casing the yard","bin":"inf","why":"Inference, and about intent specifically, which the narrative standard rules out entirely. Describe the movement pattern instead."},{"name":"Elongated object roughly 60cm, not identifiable","bin":"obs","why":"Observation, including the honest limit on it. This is the model sentence for an unclear object."},{"name":"Subject was armed","bin":"inf","why":"Inference unless the object is clearly identifiable as a weapon. This one line changes what responders prepare for."},{"name":"Dark blue van, no livery, facing the gate","bin":"obs","why":"Observation. Type, colour, absence of markings, orientation. Durable description that does not depend on a guess."},{"name":"Van was the getaway vehicle","bin":"inf","why":"Inference. Record that subjects departed and the van left at the same time, and let the reader connect it."},{"name":"No observable movement for four minutes","bin":"obs","why":"Observation, and carefully worded. \"Observable\" is doing real work there, because the view was partially obscured."},{"name":"Person had passed out","bin":"inf","why":"Inference, and a clinical one. Escalate on the plausible life-safety outcome, describe only the absence of movement."},{"name":"Officer advised the rear lock was damaged","bin":"obs","why":"Observation with its source stated, which is exactly what the standard asks for. You did not see it, the officer reported it, and the record says so."},{"name":"Rear lock had been forced","bin":"inf","why":"Inference presented as observation, twice over: the damage was not visible on camera and the cause of it is a conclusion."},{"name":"Activity matches the documented contractor pattern","bin":"obs","why":"Observation, because it cites the site profile rather than your memory. The pattern is a documented fact you checked against."},{"name":"They were probably just contractors","bin":"inf","why":"Inference, and the word probably makes it a guess with no verification behind it. If it matches a documented pattern, name the pattern. If it does not, verify."}]},"field":{"tab":"Field test","head":"Field test","sub":"Three alerts. In each one the comfortable classification and the defensible one are different. Pick the line you would actually take.","scenarios":[{"id":"f1","line":"SOP-GSOC-007 · 001","title":"Site 114, eleven false alerts deep","setup":"A retail site that has produced eleven false alerts in nine days, all of them a flag on a light pole moving in wind. Alert twelve arrives at 01:52 from the same camera and the same zone.","start":"n1","nodes":{"n1":{"text":"The live view shows the flag moving. It also shows what might be a person at the edge of frame, near the service door, or might be a shadow from the flag.","choices":[{"t":"Close it as non-actionable with the flag as the documented cause. It is the twelfth time.","to":"loss1"},{"t":"Check the other cameras covering that approach before classifying anything.","to":"n2b"},{"t":"Zoom the triggering camera on the edge of frame to resolve the shape.","to":"n2c"}]},"n2b":{"text":"The second camera shows a person at the service door, working at the lock with something. The third camera shows a bicycle laid down behind the bin store, which nothing had fired on.","choices":[{"t":"Classify actionable non-life-safety, dispatch, and record the full multi-camera sequence.","to":"win1"},{"t":"Classify it and dispatch, and keep the record to the triggering camera to save time.","to":"mid1"}]},"n2c":{"text":"The zoom is inconclusive. Heavy digital zoom on a poorly lit edge of frame gives you a shape that could be either.","choices":[{"t":"Treat it as unresolved and escalate to Level 2 for a determination.","to":"win2"},{"t":"Check the adjacent cameras instead.","to":"n2b"},{"t":"Record it as a probable shadow and close it.","to":"loss2"}]},"win1":{"end":true,"win":true,"verdict":"Held the standard","text":"Officer dispatched with a brief that includes the bicycle, the location at the service door and what the subject appears to be doing without characterizing intent. The subject leaves before arrival, the lock shows damage, and the record carries three camera views and the eleven-alert history stated as context rather than as a conclusion.","why":"A site with a history of false alerts is not exempt from verification, and complacency at a repeatedly-false site is specifically assessed in QA sampling. Reviewing across cameras is what turned a flag into a bicycle, a subject and a damaged lock. The history belonged in the record as context, not as the answer."},"win2":{"end":true,"win":true,"verdict":"Held the standard","text":"Level 2 raised at 01:55 as unresolved. The Supervisor pulls a second view, sees the subject at the service door, and it becomes a dispatch two minutes later with two people having looked at it.","why":"Unresolved is a trigger, not a disposition, and the rate of unresolved classifications escalated to Level 2 is tracked as a KPI. Asking for a second view is explicitly encouraged, never treated as a deficiency, and is recorded. You did not need to be sure, you needed to not close it."},"mid1":{"end":true,"win":false,"verdict":"Partial","text":"The dispatch happens and the officer gets there. The record shows one camera and a classification. Three weeks later QA reviews it, cannot reach the same classification from the recorded evidence, and raises a finding on classification accuracy.","why":"Classification accuracy is assessed by an independent reviewer reaching the same classification from the same evidence. If the evidence in the record is one camera, that is what they review. The work you did on the other two cameras is invisible, which for audit purposes means it did not happen."},"loss1":{"end":true,"win":false,"verdict":"Setback","text":"Closed at 01:53 as vegetation. Entry is made through the service door at 02:04 and discovered by staff at 07:30. The alert log shows twelve closes on that site, and the twelfth took eighty seconds from alert to closure.","why":"This is the exact failure mode the procedure names. The base rate was real and it was still not a verification. Documented non-event patterns are a triage input, telling you what to check against, never what to conclude."},"loss2":{"end":true,"win":false,"verdict":"Setback","text":"\"Probable shadow\" goes into the record as the cause. It is a guess with a hedge in front of it, and it is the only thing anyone reading the record later will have.","why":"Probable is not a cause and a hedge is not verification. An alert that cannot be resolved from the available view is escalated, not narrated. The record now contains an inference presented as a finding, which is the thing the narrative standard exists to prevent."}}},{"id":"f2","line":"SOP-GSOC-007 · 011","title":"An object you cannot name","setup":"02:40, industrial yard. One subject over the fence, moving toward the office block. They are carrying something in their right hand, roughly half a metre long, dark, with a shape you cannot resolve at this distance.","start":"n1","nodes":{"n1":{"text":"No other person is on site. The subject is not near anyone and nothing suggests a threat to a person yet. The object is the whole question.","choices":[{"t":"Classify actionable non-life-safety and dispatch the officer with the object described as observed.","to":"n2a"},{"t":"Classify life-safety on the object and call 911.","to":"n2b"},{"t":"Hold the classification and try to resolve the object first.","to":"n2c"}]},"n2a":{"text":"You brief the officer. They ask the obvious question: is he carrying a weapon.","choices":[{"t":"Tell them an unidentified object roughly half a metre long is visible, that no weapon has been observed, and that it has not been ruled out.","to":"win1"},{"t":"Tell them no weapon, since you have not seen one.","to":"mid1"}]},"n2b":{"text":"The dispatcher asks what the weapon is. You cannot say. They ask whether anyone is in danger. Nobody is on site but the subject.","choices":[{"t":"Say plainly: no person on site, object not identifiable, no threat to a person observed. Ask them to advise.","to":"mid2"},{"t":"Describe it as a weapon so the response is appropriate.","to":"loss1"}]},"n2c":{"text":"You try three cameras and a recorded pass. At 02:43 the subject puts the object down to climb a stair rail and the third camera resolves it: a pry bar.","choices":[{"t":"Classify actionable non-life-safety, dispatch with the object named as a pry bar and the time it was identified.","to":"win2"},{"t":"Go back and revise the earlier lines in the record to say pry bar throughout.","to":"loss2"}]},"win1":{"end":true,"win":true,"verdict":"Held the standard","text":"The officer gets the honest version and approaches accordingly, keeping distance and calling in position before contact. The subject leaves over the fence on the officer's approach. The record says exactly what was and was not established.","why":"State explicitly what has not been established. \"No weapon observed\" is different from \"no weapon present\", and the officer has to know which one they are being told. That sentence is in <span class=\"sopref\">SOP-GSOC-010</span> as a safety control, because the officer is walking into a situation you can see and they cannot."},"win2":{"end":true,"win":true,"verdict":"Held the standard","text":"Dispatch at 02:44 with the object named, the time it became identifiable, and the earlier lines left as they were written. The officer knows there is a pry bar and knows it was unidentified for the first three minutes.","why":"Two things right at once. Resolving the object across cameras rather than guessing it, and leaving the earlier record intact. A record that shows what you knew when is more defensible than one that reads as though you knew it all along."},"mid1":{"end":true,"win":false,"verdict":"Partial","text":"The officer hears no weapon and approaches directly. The object turns out to be a pry bar and nothing happens, this time. The record shows you told them no weapon when what you had was an unidentified object.","why":"The two statements are not interchangeable and the difference lands on the person walking in. This is the single clearest example in the manual of a description discipline existing for somebody else's physical safety rather than for the paperwork."},"mid2":{"end":true,"win":false,"verdict":"Partial","text":"The dispatcher takes the honest description, downgrades the response, and asks you to call back if a person becomes involved. Nothing bad happens. The initial classification was still made on an object you could not identify, with nobody at risk.","why":"Honesty on the call recovered it. The classification itself was wrong: life-safety means a threat to life or serious bodily harm, and an unidentified object with nobody on site is not that yet. Escalate as if life-safety when a life-safety outcome is plausible, which needs a person in the picture."},"loss1":{"end":true,"win":false,"verdict":"Setback","text":"Units arrive expecting an armed subject at an industrial site. The approach is tactical and a man with a pry bar has a very bad few minutes that came close to being much worse.","why":"Characterizing an unidentified object as a weapon changed what responders were told and therefore what they prepared for. The standard is not pedantry: it determines what emergency services are told and what a responding officer expects to encounter."},"loss2":{"end":true,"win":false,"verdict":"Setback","text":"The record now reads as though the pry bar was identified from the first frame. QA compares it to the clip and the timeline does not support the narrative.","why":"Rewriting earlier lines to match later knowledge is not tidying, it is changing what the record says you knew and when. Contemporaneity is a QA criterion, and the honest version, an object unidentified for three minutes then named at 02:43, is the stronger record anyway."}}},{"id":"f3","line":"SOP-GSOC-007 · 001 · 008","title":"Authorized, or not","setup":"04:05 at a distribution centre. Two subjects in high-visibility vests are unloading equipment from an unmarked white van at the side gate. The site profile lists legitimate contractor activity between 06:00 and 18:00 and names two approved contractors, both of whom use marked vehicles.","start":"n1","nodes":{"n1":{"text":"They are not hurrying, they are not hiding from the camera, and they look exactly like people doing a job. The hour and the unmarked vehicle are the only things that do not fit.","choices":[{"t":"Treat the vests as authorization and close it as non-actionable.","to":"loss1"},{"t":"Verify against the profile: hours, named contractors, vehicle. Then classify.","to":"n2b"},{"t":"Escalate to Level 2 straight away because the hour is wrong.","to":"n2c"}]},"n2b":{"text":"Hours do not match, the vehicle is not marked, and neither approved contractor is scheduled. The profile also has no documented pattern for night deliveries at this site.","choices":[{"t":"Classify actionable non-life-safety and dispatch, with the vests recorded as observed clothing rather than as authorization.","to":"win1"},{"t":"Call the client contact first to check whether they authorized it.","to":"n3b"}]},"n2c":{"text":"The Supervisor asks the reasonable question: what does the site profile say, and have you checked the approved contractor list.","choices":[{"t":"Check the profile now and come back with hours, contractors and vehicle.","to":"n2b"},{"t":"Say it just looks wrong for the hour.","to":"mid2"}]},"n3b":{"text":"It is 04:08. The client escalation contact for this site is a duty line, and the notification threshold in the annex does not obviously cover an unverified delivery.","choices":[{"t":"Dispatch the officer now and let the Supervisor decide on client notification.","to":"win1"},{"t":"Wait for the client to answer before doing anything.","to":"loss2"}]},"win1":{"end":true,"win":true,"verdict":"Held the standard","text":"Officer dispatched at 04:10 with the vests, the unmarked van and the hour all recorded as observations. They turn out to be a subcontractor of an approved contractor, working an unscheduled night job the client knew about and the GSOC did not. Nothing was stolen and the site profile gets updated.","why":"Determine authorization by checking the documented pattern, and documented patterns live in the site profile rather than in operator memory. The vests were clothing, not credentials. Note what the correct answer produced: a dispatch that found nothing wrong, a profile that is now accurate, and a record nobody has to defend."},"mid2":{"end":true,"win":false,"verdict":"Partial","text":"The Supervisor makes the call with less than they should have had, and asks you to check the profile anyway. Two minutes are lost and the escalation arrives without the one input that would have resolved it.","why":"Escalating was defensible. Escalating without the verification you could have done in ninety seconds turns a Level 2 into a question the Supervisor has to send back. Triage against documented non-event patterns is your step, and the profile is where those live."},"loss1":{"end":true,"win":false,"verdict":"Setback","text":"Closed as authorized contractor activity. They load two pallets of tooling and leave at 04:40. The loss is found at 07:15 and the incident record says the activity was authorized, with nothing supporting it.","why":"Clothing is an observation, never an authorization. The authorization test is whether the activity matches a documented legitimate pattern for this site at this hour, and every element of this one failed that test. A record asserting authorization with no documented pattern behind it is a classification with no observation supporting it."},"loss2":{"end":true,"win":false,"verdict":"Setback","text":"The duty line rings out twice. By the time the Supervisor picks it up at 04:22, the van has gone. No officer was ever dispatched and the only record of the event is your own description.","why":"Verification does not wait on a client confirmation, and an unanswered escalation is not a discharged obligation. The verified event was already actionable on the profile mismatch alone, and dispatch and client notification are separate tracks that run in parallel rather than in sequence."}}}]},"quiz":{"pass":10,"passMsg":"Ten or better means the description discipline is landing. Day 7 puts it under time pressure with the full alert chain around it, and Day 9 is the record it all feeds.","failMsg":"Under ten. The observation-or-inference drill is the fastest fix, then the six cards on how verification goes wrong. Most people miss the same two: the unidentified object and the noisy site.","items":[{"q":"A subject is carrying something you cannot identify. What goes in the record?","opts":[{"t":"The object described objectively, with an explicit note that it was not identifiable from the available view.","ok":true,"why":"You may record that a subject is carrying an object and describe it. You may not record it as a weapon unless it is clearly identifiable as one, because that distinction determines what responders are told and what they expect to encounter."},{"t":"That the subject was armed, since you cannot rule it out.","ok":false,"why":"That is the inference the standard specifically forbids, and it changes what emergency services prepare for."},{"t":"Nothing about the object until it is identified.","ok":false,"why":"An unidentified object is a material observation. Leaving it out deprives the officer of something they need to know."},{"t":"Your best guess, flagged as a guess.","ok":false,"why":"Describe what is observable rather than guessing at identity. \"Elongated object approximately 60cm, not identifiable from this view\" is the complete answer."}]},{"q":"You cannot classify an alert from the available view and nothing suggests a threat to a person.","opts":[{"t":"Escalate to Level 2 as unresolved for a supervisor determination.","ok":true,"why":"Unresolved is a trigger, not a disposition. The rate of unresolved classifications escalated to Level 2 is tracked, which tells you the procedure expects to see them."},{"t":"Record it as unresolved and close it.","ok":false,"why":"There is no fourth disposition. Recording unresolved as an outcome is how a real event gets closed as probably nothing."},{"t":"Classify it as a false alert, since nothing could be confirmed.","ok":false,"why":"A false alert requires a specific identified cause. Absence of confirmation is not a cause, and \"false alarm\" is explicitly not acceptable."},{"t":"Leave the record open until the next shift can look again.","ok":false,"why":"That hands an unresolved decision across a boundary with nobody owning it. Level 2 exists so it does not sit with one person."}]},{"q":"A site has produced eleven false alerts in nine days. Alert twelve arrives from the same camera.","opts":[{"t":"Verify it the same as any other alert. The history is a triage input, not a disposition.","ok":true,"why":"A site with a history of false alerts is not exempt from verification, and complacency at a repeatedly-false site is a named failure mode that QA samples for deliberately."},{"t":"Close it against the documented pattern without further checking.","ok":false,"why":"Documented patterns tell you what to check against, never what to conclude. The pattern is how you verify, not a substitute for verifying."},{"t":"Close it and flag the site for detection tuning.","ok":false,"why":"Flagging for tuning is right. Closing without verification is not, and the two are independent."},{"t":"Escalate it to Level 2 because the site is unreliable.","ok":false,"why":"Repeat activity at one site is a Level 2 trigger, but the first step is still your verification. Escalating without looking is not verification either."}]},{"q":"What is wrong with \"Subject was trying the doors looking for one that was unlocked\"?","opts":[{"t":"It characterizes intent, which the narrative standard rules out. Describe the movement and duration instead.","ok":true,"why":"Never characterize intent, motive or state of mind. \"Remained beside the driver door for approximately 40 seconds, then moved to the fourth vehicle\" is the same information without the mind-reading."},{"t":"Nothing, as long as it is what the operator genuinely believed.","ok":false,"why":"Sincerity is not the test. The test is whether a camera could have recorded it."},{"t":"It is too detailed for an incident narrative.","ok":false,"why":"Detail is good. The problem is the category of claim, not the quantity."},{"t":"It should be attributed to the officer instead.","ok":false,"why":"Attributing an inference to somebody else does not convert it into an observation."}]},{"q":"You have a partially legible plate on a heavy zoom.","opts":[{"t":"Do not record it. Describe the vehicle objectively instead, and let the clip stand as the evidence.","ok":true,"why":"Capture plate detail only where it is legible. A partially guessed plate is worse than none, because a guessed character puts the wrong vehicle into a report that gets acted on."},{"t":"Record the characters you are confident about and mark the rest unknown.","ok":false,"why":"Careful in spirit and still risky in practice, because a partial with a confident prefix gets searched as though it were complete. The vehicle description is the durable record."},{"t":"Record your best reading, since a lead is better than nothing.","ok":false,"why":"Not when the lead can be wrong and cannot be taken back."},{"t":"Enhance the image until the plate resolves.","ok":false,"why":"Never edit, crop, enhance or annotate source material. That is a chain-of-custody problem on top of an accuracy problem."}]},{"q":"Why review across multiple cameras before classifying?","opts":[{"t":"To establish the full sequence and confirm direction of movement, subject count, and the approach.","ok":true,"why":"The triggering camera shows the moment, not the event. The approach is often more evidentially useful than the act, which is also why captures include a margin before and after."},{"t":"To get a better quality image for the record.","ok":false,"why":"Sometimes a side effect. The reason is the sequence, not the picture quality."},{"t":"Because single-camera classifications are not permitted.","ok":false,"why":"The procedure says review across multiple cameras where available. It is about doing the work, not a formal prohibition."},{"t":"To confirm the alert was genuine rather than a platform fault.","ok":false,"why":"Feed health is a separate check. This is about reading the event."}]},{"q":"Two subjects in high-visibility vests are unloading a van at 04:05. The site profile allows contractor activity between 06:00 and 18:00.","opts":[{"t":"The vests are observed clothing, not authorization. The hour does not match the documented pattern, so verify and classify accordingly.","ok":true,"why":"The authorization test is whether the activity matches a documented legitimate pattern for this site at this hour, and the pattern lives in the site profile rather than in operator memory."},{"t":"Vests and visible unloading indicate authorized work, so close it.","ok":false,"why":"Clothing is never authorization. A record asserting authorization with no documented pattern behind it is a classification with no observation supporting it."},{"t":"Call the client to ask before doing anything else.","ok":false,"why":"Verification does not wait on a client confirmation. The profile mismatch already makes it actionable, and client notification is a separate parallel track."},{"t":"Close it but note the hour discrepancy in the passdown.","ok":false,"why":"A passdown note is not a classification and does not repair one."}]},{"q":"What does a good non-actionable record contain?","opts":[{"t":"The specific cause, the camera and zone, and what you confirmed it was not.","ok":true,"why":"\"Vegetation movement in wind, camera 3 field of view, no subject present on any camera covering that approach.\" The false-alert ratio KPI and its cause distribution both depend on that specificity."},{"t":"The classification and the time, which is all a closed alert needs.","ok":false,"why":"The classification is recorded with the reasoning and the observations supporting it. A bare disposition is what QA flags."},{"t":"\"False alarm\" plus the alert reference.","ok":false,"why":"Named explicitly in the manual as not a cause. It tells the Platform SME nothing and tells QA you did not look."},{"t":"A clip of the trigger, which speaks for itself.","ok":false,"why":"The clip is evidence, not an explanation. The record still has to say what the cause was."}]},{"q":"You want to make a clip easier for the reader to understand.","opts":[{"t":"Describe in words what to notice, reference the clip by identifier and timestamp, and leave the source untouched.","ok":true,"why":"Do not edit, crop, enhance or annotate source material. A break in the chain of custody does not necessarily make material inadmissible, but it always makes it contestable, and it will be contested."},{"t":"Crop to the relevant section and attach that.","ok":false,"why":"That is an edit to source material, however reasonable the motive."},{"t":"Brighten it so the subject is visible.","ok":false,"why":"Enhancement is explicitly ruled out. Work is done on copies, and every copy is marked as a copy."},{"t":"Add an arrow annotation pointing at the subject.","ok":false,"why":"Annotation is on the same list. The words in your record are where the pointing happens."}]},{"q":"Asking a second operator or the Supervisor for a view on a classification is:","opts":[{"t":"Encouraged, recorded, and never treated as a deficiency.","ok":true,"why":"007 says all three. It is a designed route, and the recording of it matters because it shows the decision had two sets of eyes on it."},{"t":"Acceptable for new operators during probation only.","ok":false,"why":"No such limit. It is available to anyone at any time."},{"t":"Discouraged, because it slows the queue.","ok":false,"why":"The opposite. Verification time is measured and it is not the only thing measured, and verification accuracy is sampled against the recorded evidence."},{"t":"Only appropriate once you have already classified.","ok":false,"why":"A second opinion can be requested at any time, which includes before you commit to a classification."}]},{"q":"A subject you classified as actionable non-life-safety swings a tool at another person.","opts":[{"t":"Reclassify as life-safety immediately and engage emergency services in parallel with the dispatch already running.","ok":true,"why":"The classification follows the event. Emergency escalation runs in parallel with dispatch, never after it, and time from life-safety classification to emergency services contacted is the most consequential metric in the manual."},{"t":"Update the officer first, since they are closest.","ok":false,"why":"An officer is never the sole response to a verified life-safety situation. Update them, and not before the 911 call."},{"t":"Complete the current dispatch, then escalate.","ok":false,"why":"You do not wait for the outcome of dispatch. That is stated directly in 011."},{"t":"Escalate to Level 2 so the Supervisor can authorize a Level 5.","ok":false,"why":"No approval is sought first. A life-safety event enters at Level 5 immediately and notifies in both directions in parallel."}]},{"q":"QA assesses classification accuracy how?","opts":[{"t":"An independent reviewer reaches the same classification from the same recorded evidence.","ok":true,"why":"Which means the evidence in the record is what gets reviewed. Work you did across three cameras but recorded from one is, for audit purposes, work that did not happen."},{"t":"By comparing the classification to what the officer found on scene.","ok":false,"why":"Outcome is not the standard. A correct classification can precede a scene where the subject has already left."},{"t":"By checking whether the alert was closed within the target time.","ok":false,"why":"Verification time is measured separately. Speed is not accuracy, and nothing in the assessment is graded on speed."},{"t":"By operator self-assessment at closure.","ok":false,"why":"QA is functionally independent of the floor being audited. A supervisor does not even audit their own shift."}]}]}};
+const NS = 'gsoc:' + SPEC.id + ':';
+
+/* ============================ STORAGE ============================ */
+const mem = {};
+const store = {
+  async get(k, shared=false){
+    const mk = (shared?'s:':'p:')+k;
+    try{
+      if(window.storage){ const r = await window.storage.get(k, shared); if(r) return JSON.parse(r.value); }
+    }catch(e){}
+    try{
+      const raw = window.localStorage && localStorage.getItem(mk);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    return mk in mem ? mem[mk] : null;
+  },
+  async set(k, v, shared=false){
+    const mk = (shared?'s:':'p:')+k;
+    mem[mk] = v;
+    const json = JSON.stringify(v);
+    try{ if(window.storage) await window.storage.set(k, json, shared); }catch(e){}
+    try{ if(window.localStorage) localStorage.setItem(mk, json); }catch(e){}
+  }
+};
+
+let PROFILE = { name:"", share:false };
+let PROGRESS = { visited:[], dossiers:[], sortBest:null, scenarios:[], quizTaken:false,
+  lastTab:null, revealed:[], sortState:null, scenState:null, quizState:null, updatedAt:null };
+let ATTEMPTS = [];
+
+async function loadAll(){
+  const p = await store.get(NS+'profile'); if(p) PROFILE = Object.assign(PROFILE, p);
+  const g = await store.get(NS+'progress'); if(g) PROGRESS = Object.assign(PROGRESS, g);
+  const a = await store.get(NS+'attempts'); if(Array.isArray(a)) ATTEMPTS = a;
+}
+const saveProfile  = () => store.set(NS+'profile', PROFILE);
+const saveAttempts = () => store.set(NS+'attempts', ATTEMPTS);
+function saveProgress(){
+  PROGRESS.updatedAt = new Date().toISOString();
+  paintSaved();
+  return store.set(NS+'progress', PROGRESS);
+}
+function ago(iso){
+  if(!iso) return '';
+  const s = (Date.now() - new Date(iso))/1000;
+  if(s < 90) return 'a moment ago';
+  if(s < 3600) return Math.round(s/60) + ' minutes ago';
+  if(s < 86400) return Math.round(s/3600) + ' hours ago';
+  const d = Math.round(s/86400);
+  return d === 1 ? 'yesterday' : d + ' days ago';
+}
+function paintSaved(){
+  const e = document.getElementById('savedAt');
+  if(e) e.textContent = PROGRESS.updatedAt ? 'Saved ' + ago(PROGRESS.updatedAt) : '';
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function toast(btnId, msg){
+  const b = document.getElementById(btnId); if(!b) return;
+  const old = b.textContent; b.textContent = msg; setTimeout(()=>b.textContent=old, 1400);
+}
+
+/* ============================ SHELL ============================ */
+const TABS = [
+  { id:"brief",   label:"Brief" },
+  { id:"ledger",  label:SPEC.ledger.tab },
+  { id:"gallery", label:SPEC.gallery.tab },
+  { id:"sort",    label:SPEC.sort.tab },
+  { id:"field",   label:SPEC.field.tab },
+  { id:"quiz",    label:"Assessment" },
+  { id:"records", label:"Records" }
+];
+let current = "brief";
+const GAL_TOTAL = SPEC.gallery.files.reduce((n,f)=>n+f.items.length,0);
+
+function tabLabel(id){ const t = TABS.find(x => x.id === id); return t ? t.label : id; }
+
+function buildHead(){
+  document.getElementById('mcode').textContent = SPEC.code;
+  document.getElementById('mtag').textContent = SPEC.caseTag;
+  document.getElementById('mest').textContent = 'Est. ' + SPEC.est;
+  document.getElementById('mtitle').innerHTML =
+    (SPEC.dayBox ? `<span class="tagbox">${SPEC.dayBox}</span>` : '') +
+    SPEC.title.map((t,i) => i === SPEC.accentLine ? `<span class="a">${t}</span>` : t).join('<br>');
+  document.getElementById('mdek').textContent = SPEC.dek;
+  document.getElementById('msrc').innerHTML = 'Source procedures <b>' + SPEC.sources + '</b>';
+  document.getElementById('mfoot').innerHTML = SPEC.foot;
+}
+function buildTabs(){
+  const nav = document.getElementById('tabs');
+  nav.innerHTML = TABS.map(t =>
+    `<button role="tab" data-tab="${t.id}" aria-selected="${t.id===current}">${esc(t.label)}<span class="dot"></span></button>`
+  ).join('');
+  nav.querySelectorAll('button').forEach(b => b.onclick = () => go(b.dataset.tab));
+}
+function go(id){
+  current = id;
+  document.querySelectorAll('section.view').forEach(s => s.classList.toggle('on', s.id === 'v-'+id));
+  document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab===id));
+  if(!PROGRESS.visited.includes(id)) PROGRESS.visited.push(id);
+  PROGRESS.lastTab = id;
+  saveProgress();
+  RENDER[id] && RENDER[id]();
+  paintProgress();
+  window.scrollTo({top:0, behavior:'instant'});
+}
+function completion(){
+  return {
+    brief:   PROGRESS.visited.includes('brief'),
+    ledger:  PROGRESS.revealed.length >= SPEC.ledger.rows.length,
+    gallery: PROGRESS.dossiers.length >= GAL_TOTAL,
+    sort:    PROGRESS.sortBest === SPEC.sort.items.length,
+    field:   PROGRESS.scenarios.length >= SPEC.field.scenarios.length,
+    quiz:    PROGRESS.quizTaken,
+    records: ATTEMPTS.length > 0
+  };
+}
+function paintProgress(){
+  const c = completion();
+  const keys = ['brief','ledger','gallery','sort','field','quiz'];
+  const done = keys.filter(k => c[k]).length;
+  const pct = Math.round(done/keys.length*100);
+  document.getElementById('pbar').style.width = pct+'%';
+  document.getElementById('ptext').textContent = pct+'% complete';
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('done', !!c[b.dataset.tab]));
+}
+function showResume(){
+  const box = document.getElementById('resume');
+  const q = PROGRESS.quizState;
+  const c = completion(), keys = ['brief','ledger','gallery','sort','field','quiz'];
+  const n = keys.filter(k => c[k]).length;
+  box.innerHTML = `<div class="t"><b>Welcome back${PROFILE.name ? ', ' + esc(PROFILE.name) : ''}</b>
+      You stopped in ${esc(tabLabel(PROGRESS.lastTab))} ${ago(PROGRESS.updatedAt)}. ${n} of 6 sections done${q ? `, and an assessment is sitting open at question ${q.qi + 1}` : ''}. Nothing was lost.</div>
+    ${q ? `<button class="btn" id="resQuiz">Resume the assessment</button>` : ''}
+    <button class="btn ghost" id="resDismiss">Keep going</button>`;
+  box.classList.add('on');
+  box.querySelector('#resDismiss').onclick = () => box.classList.remove('on');
+  if(q) box.querySelector('#resQuiz').onclick = () => { box.classList.remove('on'); go('quiz'); resumeQuiz(); };
+}
+
+/* ============================ VIEW: BRIEF ============================ */
+const RENDER = {};
+RENDER.brief = function(){
+  const el = document.getElementById('v-brief');
+  if(el.dataset.built) return;
+  el.dataset.built = 1;
+  el.innerHTML = `
+    <span class="eyebrow">Start here</span>
+    <h2>${esc(SPEC.brief.head)}</h2>
+    <p class="sub">${SPEC.brief.sub}</p>
+
+    ${SPEC.brief.control ? `<div class="ctrl"><span class="lab">Control</span><p>${SPEC.brief.control}</p></div>` : ''}
+
+    <div class="panel" style="margin-bottom:26px">
+      <div class="hint" style="margin-bottom:10px">Sign in for the competency record</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <input type="text" id="nameIn" placeholder="Your name or employee ID" value="${esc(PROFILE.name)}" style="flex:1">
+        <button class="btn" id="nameSave">Save name</button>
+      </div>
+      <label class="check" style="margin-top:14px">
+        <input type="checkbox" id="shareIn" ${PROFILE.share?'checked':''}>
+        Add my result to the shared cohort roster
+      </label>
+      <p class="note" style="margin:8px 0 0">Off by default. Your scores stay on this device either way. Turn it on and your name, score, and date also go to a roster the Training Lead and everyone else in the cohort can read. Nothing here is the competency record of ${SPEC.certRef} on its own. The Training Lead records that separately.</p>
+    </div>
+
+    <h3>The parts</h3>
+    <div class="ledger">
+      ${SPEC.brief.parts.map(([k,v]) => `<div class="row"><div class="label">${esc(k)}</div><div style="font-size:15px">${v}</div></div>`).join('')}
+    </div>
+
+    ${SPEC.brief.anchors ? `
+      <h3>${esc(SPEC.brief.anchors.head)}</h3>
+      <div class="panel">
+        <ol style="margin:0;padding-left:20px">
+          ${SPEC.brief.anchors.items.map(t => `<li style="margin-bottom:10px">${t}</li>`).join('')}
+        </ol>
+      </div>` : ''}
+
+    <div style="margin-top:28px"><button class="btn" id="goLedger">${esc(SPEC.brief.cta)}</button></div>
+  `;
+  document.getElementById('nameSave').onclick = () => {
+    PROFILE.name = document.getElementById('nameIn').value.trim();
+    saveProfile(); toast('nameSave','Saved');
+  };
+  document.getElementById('shareIn').onchange = e => { PROFILE.share = e.target.checked; saveProfile(); };
+  document.getElementById('goLedger').onclick = () => go('ledger');
+};
+
+/* ============================ VIEW: LEDGER ============================ */
+RENDER.ledger = function(){
+  const L = SPEC.ledger;
+  const el = document.getElementById('v-ledger');
+  el.innerHTML = `
+    <span class="eyebrow">Part one</span>
+    <h2>${esc(L.head)}</h2>
+    <p class="sub">${L.sub}</p>
+    <div class="ledger">
+      ${L.rows.map((r,i) => {
+        const hideB = i % 2 === 0;
+        const A = `<div class="cell"><span class="who">${esc(L.colA)}</span><span class="txt">${r.a}</span></div>`;
+        const B = `<div class="cell b${L.negB?' neg':''}"><span class="who">${esc(L.colB)}</span><span class="txt">${r.b}</span></div>`;
+        const hidden = () => `<div class="cell${hideB?(' b'+(L.negB?' neg':'')):''} reveal" data-rev="${i}"><span class="who">${esc(hideB?L.colB:L.colA)}</span><span class="txt masked">${hideB?r.b:r.a}</span></div>`;
+        return `<div class="row"><div class="label">${esc(r.label)}</div><div class="cols">
+          ${hideB ? A + hidden() : hidden() + B}
+        </div></div>`;
+      }).join('')}
+    </div>
+    <div style="margin-top:26px"><button class="btn" id="toGallery">${esc(L.cta)}</button></div>
+  `;
+  el.querySelectorAll('[data-rev]').forEach(d => {
+    const idx = +d.dataset.rev;
+    const open = () => { d.classList.add('open'); const m = d.querySelector('.masked'); if(m) m.classList.remove('masked'); };
+    if(PROGRESS.revealed.includes(idx)) open();
+    d.onclick = () => {
+      open();
+      if(!PROGRESS.revealed.includes(idx)){ PROGRESS.revealed.push(idx); saveProgress(); paintProgress(); }
+    };
+  });
+  el.querySelector('#toGallery').onclick = () => go('gallery');
+};
+
+/* ============================ VIEW: GALLERY ============================ */
+let galFile = 0;
+RENDER.gallery = function(){
+  const G = SPEC.gallery;
+  const f = G.files[galFile];
+  const alt = galFile === 1;
+  const el = document.getElementById('v-gallery');
+  el.innerHTML = `
+    <span class="eyebrow${alt?' alt':''}">Part two</span>
+    <h2>${esc(G.head)}</h2>
+    <p class="sub">${G.sub}</p>
+    <div class="side-switch">
+      ${G.files.map((x,i) => `<button class="${i===galFile?('on'+(i===1?' alt':'')):''}" data-file="${i}">${esc(x.label)}</button>`).join('')}
+    </div>
+    <div class="dossiers">
+      ${f.items.map((v,i) => `
+        <div class="card ${alt?'alt':''} ${PROGRESS.dossiers.includes(v.id)?'read':''}" data-open="${v.id}">
+          <div class="no">${String(i+1).padStart(2,'0')} / ${String(f.items.length).padStart(2,'0')}</div>
+          <div class="nm">${esc(v.name)}</div>
+          <div class="real">${esc(v.real)}</div>
+          <div class="teaser">${v.teaser}</div>
+          <span class="more">${PROGRESS.dossiers.includes(v.id)?'Reviewed · open again':'Open the card'}</span>
+        </div>`).join('')}
+    </div>
+    <p class="note" style="margin-top:18px">${G.note}</p>
+    <div style="margin-top:24px"><button class="btn" id="toSort">${esc(G.cta)}</button></div>
+  `;
+  el.querySelectorAll('[data-file]').forEach(b => b.onclick = () => { galFile = +b.dataset.file; RENDER.gallery(); });
+  el.querySelectorAll('[data-open]').forEach(c => c.onclick = () => openDossier(c.dataset.open));
+  el.querySelector('#toSort').onclick = () => go('sort');
+};
+
+function findItem(id){
+  for(let i=0;i<SPEC.gallery.files.length;i++){
+    const it = SPEC.gallery.files[i].items.find(x => x.id === id);
+    if(it) return { it, fi:i };
+  }
+  return null;
+}
+function openDossier(id){
+  const found = findItem(id); if(!found) return;
+  const { it:v, fi } = found;
+  const alt = fi === 1;
+  const d = document.getElementById('dossier');
+  d.className = 'dossier' + (alt?' alt':'');
+  d.innerHTML = `
+    <button class="close" aria-label="Close">&times;</button>
+    <span class="eyebrow${alt?' alt':''}">${esc(SPEC.gallery.files[fi].label)}</span>
+    <h4>${esc(v.name)}</h4>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em">${esc(v.real)}</div>
+    <div style="margin-top:18px">
+      ${v.fields.map(([k,t]) => `<div class="field"><div class="k">${esc(k)}</div><div class="v">${t}</div></div>`).join('')}
+    </div>
+    <div class="flap" id="flap">
+      <div class="k">Sealed · ${esc(v.sealedLabel)} &nbsp;›&nbsp; tap to unseal</div>
+      <div class="body">${v.sealed}</div>
+    </div>
+  `;
+  document.getElementById('scrim').classList.add('on');
+  document.body.style.overflow = 'hidden';
+  d.querySelector('.close').onclick = closeDossier;
+  const flap = document.getElementById('flap');
+  flap.onclick = () => {
+    flap.classList.add('open');
+    flap.querySelector('.k').textContent = 'Unsealed · ' + v.sealedLabel;
+    if(!PROGRESS.dossiers.includes(v.id)){ PROGRESS.dossiers.push(v.id); saveProgress(); paintProgress(); }
+  };
+}
+function closeDossier(){
+  document.getElementById('scrim').classList.remove('on');
+  document.body.style.overflow = '';
+  RENDER.gallery();
+}
+document.getElementById('scrim').onclick = e => { if(e.target.id === 'scrim') closeDossier(); };
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && document.getElementById('scrim').classList.contains('on')) closeDossier(); });
+
+/* ============================ VIEW: SORT ============================ */
+let picked = null;
+RENDER.sort = function(){
+  const S = SPEC.sort;
+  const el = document.getElementById('v-sort');
+  picked = null;
+  if(!PROGRESS.sortState){
+    const order = S.items.map((_,i)=>i).sort(()=>Math.random()-0.5);
+    const place = {}; order.forEach(i => place[i] = 'pool');
+    PROGRESS.sortState = { order, place };
+    saveProgress();
+  }
+  const st = PROGRESS.sortState;
+  const chipHtml = i => `<div class="chip" draggable="true" data-i="${i}">${esc(S.items[i].name)}</div>`;
+  const zoneHtml = z => st.order.filter(i => st.place[i] === z).map(chipHtml).join('');
+  el.innerHTML = `
+    <span class="eyebrow">Part three</span>
+    <h2>${esc(S.head)}</h2>
+    <p class="sub">${S.sub}</p>
+    <div class="dnd-pool" id="pool">${zoneHtml('pool')}</div>
+    <div class="bins">
+      ${S.bins.map(b => `<div class="bin" data-bin="${b.key}"><h5>${esc(b.label)}</h5><div class="bsub">${esc(b.sub||'')}</div><div class="drop">${zoneHtml(b.key)}</div></div>`).join('')}
+    </div>
+    <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn" id="checkSort">Check it</button>
+      <button class="btn ghost" id="resetSort">Start over</button>
+    </div>
+    <div class="feedback" id="sortFb"></div>
+    <div style="margin-top:26px"><button class="btn ghost" id="toField">${esc(S.cta)}</button></div>
+  `;
+
+  const pool = el.querySelector('#pool');
+  const chips = () => el.querySelectorAll('.chip');
+  const zones = [pool, ...el.querySelectorAll('.bin .drop')];
+
+  function wire(){
+    chips().forEach(c => {
+      c.ondragstart = e => { e.dataTransfer.setData('text/plain', c.dataset.i); e.dataTransfer.effectAllowed='move'; };
+      c.onclick = () => {
+        if(picked === c){ c.classList.remove('picked'); picked = null; return; }
+        chips().forEach(x=>x.classList.remove('picked'));
+        c.classList.add('picked'); picked = c;
+      };
+    });
+  }
+  function drop(target, i){
+    const chip = el.querySelector(`.chip[data-i="${i}"]`);
+    if(!chip) return;
+    target.appendChild(chip);
+    chip.classList.remove('picked','right','wrong');
+    picked = null;
+    const bin = target.closest('.bin');
+    st.place[i] = bin ? bin.dataset.bin : 'pool';
+    st.order = [...el.querySelectorAll('.chip')].map(c => +c.dataset.i);
+    saveProgress();
+  }
+  zones.forEach(z => {
+    const host = z.classList.contains('drop') ? z.parentElement : z;
+    z.ondragover = e => { e.preventDefault(); host.classList.add('over'); };
+    z.ondragleave = () => host.classList.remove('over');
+    z.ondrop = e => { e.preventDefault(); host.classList.remove('over'); drop(z, e.dataTransfer.getData('text/plain')); };
+    z.onclick = e => { if(picked && !e.target.classList.contains('chip')) drop(z, picked.dataset.i); };
+  });
+  el.querySelectorAll('.bin').forEach(b => b.onclick = e => {
+    if(picked && !e.target.classList.contains('chip')) drop(b.querySelector('.drop'), picked.dataset.i);
+  });
+
+  el.querySelector('#checkSort').onclick = () => {
+    let right = 0, misses = [];
+    const unplaced = pool.querySelectorAll('.chip').length;
+    el.querySelectorAll('.bin').forEach(bin => {
+      bin.querySelectorAll('.chip').forEach(c => {
+        const it = S.items[+c.dataset.i];
+        const ok = it.bin === bin.dataset.bin;
+        c.classList.toggle('right', ok); c.classList.toggle('wrong', !ok);
+        if(ok) right++; else misses.push(it);
+      });
+    });
+    const total = S.items.length;
+    const fb = el.querySelector('#sortFb');
+    fb.className = 'feedback on ' + (right===total ? 'good' : 'bad');
+    fb.innerHTML = right===total
+      ? `<b style="font-family:var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--green)">${total} for ${total}</b><br>${S.win}`
+      : `<b style="font-family:var(--display);letter-spacing:.1em;text-transform:uppercase">${right} of ${total} placed correctly${unplaced?`, ${unplaced} still in the pool`:''}</b>
+         <div style="margin-top:10px">${misses.map(m => `<div style="margin-bottom:6px"><b>${esc(m.name)}</b> · ${m.why}</div>`).join('')}</div>`;
+    if(PROGRESS.sortBest == null || right > PROGRESS.sortBest){ PROGRESS.sortBest = right; saveProgress(); }
+    paintProgress();
+  };
+  el.querySelector('#resetSort').onclick = () => {
+    el.querySelectorAll('.bin .chip').forEach(c => {
+      c.classList.remove('right','wrong','picked');
+      pool.appendChild(c);
+      st.place[+c.dataset.i] = 'pool';
+    });
+    saveProgress();
+    el.querySelector('#sortFb').className = 'feedback';
+  };
+  wire();
+};
+
+/* ============================ VIEW: FIELD TEST ============================ */
+let activeScen = null, scenNode = null, scenTrail = [];
+RENDER.field = function(){
+  const F = SPEC.field;
+  const el = document.getElementById('v-field');
+  if(!activeScen && PROGRESS.scenState){
+    const s = F.scenarios.find(x => x.id === PROGRESS.scenState.id);
+    if(s && s.nodes[PROGRESS.scenState.node]){
+      activeScen = s; scenNode = PROGRESS.scenState.node; scenTrail = (PROGRESS.scenState.trail || []).slice();
+    } else { PROGRESS.scenState = null; }
+  }
+  if(activeScen) return paintScen();
+  el.innerHTML = `
+    <span class="eyebrow">Part four</span>
+    <h2>${esc(F.head)}</h2>
+    <p class="sub">${F.sub}</p>
+    <div class="scen-pick">
+      ${F.scenarios.map(s => {
+        const rec = PROGRESS.scenarios.find(x => x.id === s.id);
+        return `<div class="card ${rec?'read':''}" data-scen="${s.id}">
+          <div class="no">${esc(s.line)}</div>
+          <div class="nm">${esc(s.title)}</div>
+          <div class="teaser">${s.setup}</div>
+          <span class="more">${rec ? (rec.win?'Held the standard · run again':'Ended short · run again') : 'Run the scenario'}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="margin-top:26px"><button class="btn" id="toQuiz">Take the assessment</button></div>
+  `;
+  el.querySelectorAll('[data-scen]').forEach(c => c.onclick = () => {
+    activeScen = F.scenarios.find(s => s.id === c.dataset.scen);
+    scenNode = activeScen.start; scenTrail = [];
+    paintScen();
+  });
+  el.querySelector('#toQuiz').onclick = () => go('quiz');
+};
+function paintScen(){
+  const el = document.getElementById('v-field');
+  const s = activeScen, n = s.nodes[scenNode];
+  if(n.end){
+    const rec = PROGRESS.scenarios.find(x => x.id === s.id);
+    if(rec){ rec.win = rec.win || n.win; } else { PROGRESS.scenarios.push({id:s.id, win:n.win}); }
+    PROGRESS.scenState = null;
+    saveProgress(); paintProgress();
+  } else {
+    PROGRESS.scenState = { id:s.id, node:scenNode, trail:scenTrail.slice() };
+    saveProgress();
+  }
+  el.innerHTML = `
+    <button class="btn ghost" id="backScen" style="margin-bottom:18px">← All scenarios</button>
+    <span class="eyebrow">${esc(s.line)}</span>
+    <h2>${esc(s.title)}</h2>
+    <p class="sub">${s.setup}</p>
+    ${n.end ? `
+      <div class="outcome ${n.win?'win':(n.verdict==='Partial'?'':'loss')}">
+        <div class="verdict">${esc(n.verdict)}</div>
+        <p style="margin:0 0 14px">${n.text}</p>
+        <div style="border-top:1px solid var(--line);padding-top:12px">
+          <div class="hint" style="margin-bottom:6px">Why it played out that way</div>
+          <p style="margin:0">${n.why}</p>
+        </div>
+        <div class="trail">Your line: ${scenTrail.join(' → ')}</div>
+      </div>
+      <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn" id="againScen">Run it again</button>
+        <button class="btn ghost" id="backScen2">Pick another scenario</button>
+      </div>`
+    : `
+      <div class="node">
+        <div class="stage">Decision ${scenTrail.length + 1}</div>
+        <p class="text">${n.text}</p>
+        <div class="choices">
+          ${n.choices.map((c,i) => `<button class="choice" data-to="${c.to}" data-i="${i}">${c.t}</button>`).join('')}
+        </div>
+      </div>
+      ${scenTrail.length ? `<div class="trail">Your line so far: ${scenTrail.join(' → ')}</div>` : ''}`}
+  `;
+  const back = () => { activeScen = null; PROGRESS.scenState = null; saveProgress(); RENDER.field(); };
+  el.querySelector('#backScen').onclick = back;
+  if(el.querySelector('#backScen2')) el.querySelector('#backScen2').onclick = back;
+  if(el.querySelector('#againScen')) el.querySelector('#againScen').onclick = () => { scenNode = s.start; scenTrail = []; paintScen(); };
+  el.querySelectorAll('.choice').forEach(b => b.onclick = () => {
+    scenTrail.push('option ' + 'ABCD'[+b.dataset.i]);
+    scenNode = b.dataset.to;
+    paintScen();
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+}
+
+/* ============================ VIEW: QUIZ ============================ */
+const QUIZ = SPEC.quiz.items;
+const PASS = SPEC.quiz.pass;
+let qi = 0, answers = [], quizOrder = [], quizLive = false;
+RENDER.quiz = function(){
+  const el = document.getElementById('v-quiz');
+  if(!quizLive) return paintQuizIntro(el);
+  paintQuestion(el);
+};
+function paintQuizIntro(el){
+  const prior = ATTEMPTS.filter(a => a.name === (PROFILE.name || 'Unnamed'));
+  const open = PROGRESS.quizState;
+  el.innerHTML = `
+    <span class="eyebrow">Part five</span>
+    <h2>Assessment</h2>
+    <p class="sub">${QUIZ.length} questions. You answer, it tells you immediately whether you got it, and it explains both the right answer and the one you picked. No going back to change it, which is the point. Pass mark is ${PASS} of ${QUIZ.length}. If you close the module partway through, the attempt waits for you.</p>
+    ${open ? `<div class="resumebar">
+      <div style="flex:1;min-width:220px">
+        <b style="font-family:var(--display);text-transform:uppercase;letter-spacing:.1em;font-size:13px;color:var(--prism);display:block;margin-bottom:4px">Attempt in progress</b>
+        Question ${open.qi + 1} of ${QUIZ.length}, ${open.answers.filter(a=>a.ok).length} correct so far. Started ${ago(PROGRESS.updatedAt)}.
+      </div>
+      <button class="btn" id="resumeQ">Pick up at question ${open.qi + 1}</button>
+      <button class="btn ghost" id="dropQ">Scrap it, start fresh</button>
+    </div>` : ''}
+    <div class="panel">
+      <div class="hint" style="margin-bottom:8px">Recording as</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <input type="text" id="qName" placeholder="Your name or employee ID" value="${esc(PROFILE.name)}" style="flex:1">
+        <button class="btn" id="startQuiz">Begin</button>
+      </div>
+      <label class="check" style="margin-top:14px">
+        <input type="checkbox" id="qShare" ${PROFILE.share?'checked':''}> Add this result to the shared cohort roster
+      </label>
+      <p class="note" style="margin:8px 0 0">This is practice, not the gate. The gate is the written assessment the Training Lead issues and marks under ${SPEC.certRef}.</p>
+      ${prior.length ? `<p class="note" style="margin:14px 0 0;border-top:1px solid var(--line);padding-top:12px">Previous attempts under this name: ${prior.length}. Best so far: ${Math.max(...prior.map(a=>a.score))}/${QUIZ.length}.</p>` : ''}
+    </div>
+  `;
+  if(el.querySelector('#resumeQ')){
+    el.querySelector('#resumeQ').onclick = () => resumeQuiz();
+    el.querySelector('#dropQ').onclick = () => { PROGRESS.quizState = null; saveProgress(); RENDER.quiz(); };
+  }
+  el.querySelector('#startQuiz').onclick = () => {
+    PROFILE.name = el.querySelector('#qName').value.trim();
+    PROFILE.share = el.querySelector('#qShare').checked;
+    saveProfile();
+    qi = 0; answers = []; quizLive = true;
+    quizOrder = QUIZ.map((q,i)=>i).sort(()=>Math.random()-0.5);
+    PROGRESS.quizState = { order:quizOrder, qi:0, answers:[], name:PROFILE.name };
+    saveProgress();
+    RENDER.quiz();
+  };
+}
+function paintQuestion(el){
+  const q = QUIZ[quizOrder[qi]];
+  const order = q.opts.map((o,i)=>i).sort(()=>Math.random()-0.5);
+  el.innerHTML = `
+    <div class="qhead">
+      <span class="n">Question ${qi+1} of ${QUIZ.length}</span>
+      <span class="n">${answers.filter(a=>a.ok).length} correct so far</span>
+    </div>
+    <p class="qtext">${q.q}</p>
+    <div class="opts">
+      ${order.map((oi,pos) => `<button class="opt" data-oi="${oi}"><span class="ltr">${'ABCD'[pos]}</span><span>${q.opts[oi].t}</span></button>`).join('')}
+    </div>
+    <div class="rationale" id="rat"></div>
+    <div id="nextWrap" style="margin-top:18px;display:none">
+      <button class="btn" id="nextQ">${qi === QUIZ.length-1 ? 'See your score' : 'Next question'}</button>
+    </div>
+  `;
+  el.querySelectorAll('.opt').forEach(b => b.onclick = () => {
+    const oi = +b.dataset.oi, chosen = q.opts[oi], ok = !!chosen.ok;
+    const correct = q.opts.findIndex(o => o.ok);
+    el.querySelectorAll('.opt').forEach(x => {
+      x.disabled = true;
+      if(+x.dataset.oi === correct) x.classList.add('correct');
+      if(+x.dataset.oi === oi && !ok) x.classList.add('chosen-wrong');
+    });
+    const rat = el.querySelector('#rat');
+    rat.className = 'rationale on ' + (ok ? 'right' : 'wrong');
+    rat.innerHTML = ok
+      ? `<div class="tag">Correct</div><div class="why">${q.opts[correct].why}</div>`
+      : `<div class="tag">Not quite</div>
+         <div class="why"><b>You picked:</b> ${chosen.t}<br>${chosen.why}</div>
+         <div class="miss"><b>The answer is:</b> ${q.opts[correct].t}<br>${q.opts[correct].why}</div>`;
+    answers.push({ qi:quizOrder[qi], ok, chosen:oi });
+    PROGRESS.quizState = { order:quizOrder, qi:answers.length, answers:answers.slice(), name:PROFILE.name };
+    saveProgress();
+    el.querySelector('#nextWrap').style.display = 'block';
+    el.querySelector('#nextQ').onclick = () => {
+      qi++;
+      if(qi >= QUIZ.length) finishQuiz(el); else paintQuestion(el);
+      window.scrollTo({top:0, behavior:'smooth'});
+    };
+  });
+}
+function resumeQuiz(){
+  const st = PROGRESS.quizState;
+  if(!st) return;
+  quizOrder = st.order; answers = st.answers.slice(); qi = st.qi; quizLive = true;
+  if(st.name && !PROFILE.name){ PROFILE.name = st.name; saveProfile(); }
+  const el = document.getElementById('v-quiz');
+  if(qi >= QUIZ.length) finishQuiz(el); else paintQuestion(el);
+}
+async function finishQuiz(el){
+  quizLive = false;
+  PROGRESS.quizState = null;
+  const score = answers.filter(a=>a.ok).length;
+  const pct = Math.round(score/QUIZ.length*100);
+  const attempt = {
+    id: 'a' + Date.now() + Math.floor(Math.random()*999),
+    name: PROFILE.name || 'Unnamed',
+    when: new Date().toISOString(),
+    score, total: QUIZ.length, pct,
+    detail: answers.map(a => ({ q:a.qi, ok:a.ok, chosen:a.chosen }))
+  };
+  ATTEMPTS.push(attempt);
+  PROGRESS.quizTaken = true;
+  await saveAttempts(); await saveProgress();
+  if(PROFILE.share){
+    const roster = (await store.get(NS+'roster', true)) || [];
+    roster.push({ name:attempt.name, when:attempt.when, score, total:QUIZ.length, pct });
+    await store.set(NS+'roster', roster.slice(-300), true);
+  }
+  const pass = score >= PASS;
+  const missed = answers.filter(a => !a.ok).map(a => QUIZ[a.qi].q);
+  el.innerHTML = `
+    <div class="scorewrap">
+      <div class="hint">Attempt ${ATTEMPTS.filter(a=>a.name===attempt.name).length} · ${esc(attempt.name)}</div>
+      <div class="bigscore">${score}<span style="color:var(--muted);font-size:.5em">/${QUIZ.length}</span></div>
+      <div class="stamp ${pass?'':'fail'}">${pass ? 'At standard' : 'Review needed'}</div>
+      <p class="sub" style="margin:10px auto 0">${pass ? SPEC.quiz.passMsg : SPEC.quiz.failMsg}</p>
+    </div>
+    ${missed.length ? `<div class="panel"><div class="hint" style="margin-bottom:10px">What you missed</div>
+      ${missed.map(m => `<div style="border-top:1px solid var(--line);padding:10px 0;font-size:15px">${m}</div>`).join('')}</div>` : ''}
+    <div style="margin-top:22px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn" id="retake">Take it again</button>
+      <button class="btn ghost" id="toRecords">See the record log</button>
+      <button class="btn ghost" id="toGal">Back to the cards</button>
+    </div>
+  `;
+  el.querySelector('#retake').onclick = () => { qi=0; answers=[]; quizLive=false; RENDER.quiz(); };
+  el.querySelector('#toRecords').onclick = () => go('records');
+  el.querySelector('#toGal').onclick = () => go('gallery');
+  paintProgress();
+}
+
+/* ============================ VIEW: RECORDS ============================ */
+RENDER.records = function(){
+  const el = document.getElementById('v-records');
+  const mine = ATTEMPTS.slice().sort((a,b) => new Date(b.when) - new Date(a.when));
+  const best = mine.length ? Math.max(...mine.map(a=>a.score)) : 0;
+  const avg  = mine.length ? (mine.reduce((s,a)=>s+a.score,0)/mine.length).toFixed(1) : '0';
+  const first = mine.length ? mine[mine.length-1].score : 0;
+
+  const acc = QUIZ.map((q,i) => {
+    const tries = ATTEMPTS.flatMap(a => a.detail.filter(d => d.q === i));
+    const right = tries.filter(d => d.ok).length;
+    return { i, q:q.q, tries:tries.length, pct: tries.length ? Math.round(right/tries.length*100) : null };
+  }).filter(x => x.tries > 0).sort((a,b) => a.pct - b.pct);
+
+  el.innerHTML = `
+    <span class="eyebrow">Part six</span>
+    <h2>Records</h2>
+    <p class="sub">Every attempt logged on this device, plus which questions keep tripping people up. A criterion failing across several operators is a curriculum finding under ${SPEC.qaRef}, not a coaching matter, so this page is worth showing the Training Lead.</p>
+    <div class="panel" style="margin-bottom:24px">
+      <div class="hint" style="margin-bottom:8px">Session state</div>
+      <div style="font-size:15px">Last saved ${PROGRESS.updatedAt ? ago(PROGRESS.updatedAt) + ' (' + new Date(PROGRESS.updatedAt).toLocaleString() + ')' : 'never'}.
+      ${PROGRESS.lastTab ? 'Last section open: ' + esc(tabLabel(PROGRESS.lastTab)) + '.' : ''}
+      ${PROGRESS.quizState ? '<b>An assessment is paused at question ' + (PROGRESS.quizState.qi + 1) + '.</b>' : ''}
+      ${PROGRESS.scenState ? 'A scenario is paused mid-branch.' : ''}</div>
+    </div>
+
+    ${mine.length ? `
+    <div class="statgrid">
+      <div class="stat"><div class="k">Attempts</div><div class="v">${mine.length}</div></div>
+      <div class="stat"><div class="k">Best score</div><div class="v">${best}<span style="font-size:.5em;color:var(--muted)">/${QUIZ.length}</span></div></div>
+      <div class="stat"><div class="k">Average</div><div class="v">${avg}</div></div>
+      <div class="stat"><div class="k">First to latest</div><div class="v">${first} → ${mine[0].score}</div></div>
+    </div>
+
+    <h3>Weakest questions first</h3>
+    <div class="qbars">
+      ${acc.slice(0,6).map(a => `
+        <div class="qbar">
+          <div class="track"><i style="width:${a.pct}%;background:${a.pct<50?'var(--crimson)':a.pct<80?'var(--amber)':'var(--green)'}"></i>
+            <span>${esc(a.q.length > 62 ? a.q.slice(0,62)+'…' : a.q)}</span></div>
+          <div class="pct">${a.pct}% · ${a.tries}x</div>
+        </div>`).join('')}
+    </div>
+
+    <h3>Attempt log</h3>
+    <div style="overflow-x:auto">
+      <table class="rec">
+        <thead><tr><th>#</th><th>Name</th><th>Date</th><th>Score</th><th>%</th><th>Missed</th></tr></thead>
+        <tbody>
+          ${mine.map((a,idx) => `<tr>
+            <td>${mine.length-idx}</td>
+            <td>${esc(a.name)}</td>
+            <td style="white-space:nowrap">${new Date(a.when).toLocaleString()}</td>
+            <td>${a.score}/${a.total}</td>
+            <td>${a.pct}%</td>
+            <td style="color:var(--muted);font-family:var(--mono);font-size:12px">${a.detail.filter(d=>!d.ok).map(d=>'Q'+(d.q+1)).join(' ') || 'none'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>` : `<div class="panel"><b style="font-family:var(--display);letter-spacing:.1em;text-transform:uppercase">Nothing logged yet</b>
+      <p style="margin:10px 0 16px">Take the assessment and every attempt lands here with the date, score, and which questions went wrong.</p>
+      <button class="btn" id="goQuizEmpty">Go to the assessment</button></div>`}
+
+    <h3>Activity outside the assessment</h3>
+    <table class="rec">
+      <tbody>
+        <tr><td>Cards unsealed</td><td>${PROGRESS.dossiers.length} of ${GAL_TOTAL}</td></tr>
+        <tr><td>Best sort</td><td>${PROGRESS.sortBest == null ? 'not attempted' : PROGRESS.sortBest + ' of ' + SPEC.sort.items.length}</td></tr>
+        <tr><td>Scenarios run</td><td>${PROGRESS.scenarios.length} of ${SPEC.field.scenarios.length}${PROGRESS.scenarios.length ? ' · standard held in ' + PROGRESS.scenarios.filter(s=>s.win).length : ''}</td></tr>
+        <tr><td>Ledger rows revealed</td><td>${PROGRESS.revealed.length} of ${SPEC.ledger.rows.length}</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Export and roster</h3>
+    <div class="toolbar">
+      <button class="btn" id="csvBtn" ${mine.length?'':'disabled'}>Show CSV</button>
+      <button class="btn ghost" id="dlBtn" ${mine.length?'':'disabled'}>Download CSV</button>
+      <button class="btn ghost" id="rosterBtn">Load cohort roster</button>
+      <button class="btn ghost danger" id="clearBtn" ${mine.length?'':'disabled'}>Clear my records</button>
+    </div>
+    <textarea class="csv" id="csvOut" readonly></textarea>
+    <div id="rosterOut"></div>
+    <p class="note" style="margin-top:18px">Records are stored per person on this device. The cohort roster is a shared list, so anything you send there is readable by everyone else using this module.</p>
+
+    <h3>Move progress to another machine</h3>
+    <p class="note" style="margin-bottom:14px">This copies your whole state, scores, cards, sort, scenarios, and any paused attempt, into a block of text. Paste it into the same box on another device to land exactly where you left off.</p>
+    <div class="toolbar">
+      <button class="btn ghost" id="expBtn">Copy my progress</button>
+      <button class="btn ghost" id="impBtn">Paste progress in</button>
+    </div>
+    <textarea class="csv" id="stateBox" placeholder="Paste a progress block here, then press Restore."></textarea>
+    <div id="impActions" style="margin-top:10px;display:none"><button class="btn" id="doImp">Restore this progress</button></div>
+    <div id="impStatus" class="feedback"></div>
+  `;
+
+  if(el.querySelector('#goQuizEmpty')) el.querySelector('#goQuizEmpty').onclick = () => go('quiz');
+
+  const csv = () => {
+    const head = ['attempt','name','timestamp','score','total','percent', ...QUIZ.map((q,i)=>'Q'+(i+1))];
+    const rows = ATTEMPTS.map((a,i) => {
+      const per = QUIZ.map((q,qi2) => { const d = a.detail.find(x=>x.q===qi2); return d ? (d.ok?1:0) : ''; });
+      return [i+1, `"${String(a.name).replace(/"/g,'""')}"`, a.when, a.score, a.total, a.pct, ...per];
+    });
+    return [head.join(','), ...rows.map(r=>r.join(','))].join('\n');
+  };
+  const out = el.querySelector('#csvOut');
+  if(el.querySelector('#csvBtn')) el.querySelector('#csvBtn').onclick = () => {
+    out.value = csv(); out.classList.add('on'); out.focus(); out.select();
+  };
+  if(el.querySelector('#dlBtn')) el.querySelector('#dlBtn').onclick = () => {
+    try{
+      const blob = new Blob([csv()], {type:'text/csv'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = SPEC.code.toLowerCase() + '-results.csv';
+      document.body.appendChild(a); a.click(); a.remove();
+    }catch(e){ out.value = csv(); out.classList.add('on'); }
+  };
+  el.querySelector('#rosterBtn').onclick = async () => {
+    const roster = (await store.get(NS+'roster', true)) || [];
+    const box = el.querySelector('#rosterOut');
+    if(!roster.length){ box.innerHTML = `<p class="note">Roster is empty. Results only land here when someone turns on sharing before taking the assessment.</p>`; return; }
+    const sorted = roster.slice().sort((a,b) => b.score - a.score || new Date(a.when) - new Date(b.when));
+    box.innerHTML = `<h3>Cohort roster · ${roster.length} entries</h3><div style="overflow-x:auto"><table class="rec">
+      <thead><tr><th>Rank</th><th>Name</th><th>Score</th><th>%</th><th>Date</th></tr></thead>
+      <tbody>${sorted.map((r,i) => `<tr><td>${i+1}</td><td>${esc(r.name)}</td><td>${r.score}/${r.total}</td><td>${r.pct}%</td><td style="white-space:nowrap">${new Date(r.when).toLocaleDateString()}</td></tr>`).join('')}</tbody>
+    </table></div>`;
+  };
+  if(el.querySelector('#clearBtn')) el.querySelector('#clearBtn').onclick = async function(){
+    if(this.dataset.armed !== '1'){ this.dataset.armed = '1'; this.textContent = 'Tap again to erase everything'; return; }
+    ATTEMPTS = [];
+    PROGRESS = { visited:['records'], dossiers:[], sortBest:null, scenarios:[], quizTaken:false,
+      lastTab:'records', revealed:[], sortState:null, scenState:null, quizState:null, updatedAt:null };
+    await saveAttempts(); await saveProgress();
+    RENDER.records(); paintProgress();
+  };
+
+  const box = el.querySelector('#stateBox');
+  el.querySelector('#expBtn').onclick = () => {
+    box.value = btoa(unescape(encodeURIComponent(JSON.stringify({ v:1, m:SPEC.id, profile:PROFILE, progress:PROGRESS, attempts:ATTEMPTS }))));
+    box.classList.add('on'); box.readOnly = true; box.focus(); box.select();
+    el.querySelector('#impActions').style.display = 'none';
+    toast('expBtn','Selected, now copy it');
+  };
+  el.querySelector('#impBtn').onclick = () => {
+    box.value = ''; box.readOnly = false; box.classList.add('on'); box.focus();
+    el.querySelector('#impActions').style.display = 'block';
+  };
+  el.querySelector('#doImp').onclick = async () => {
+    const st = document.getElementById('impStatus');
+    try{
+      const data = JSON.parse(decodeURIComponent(escape(atob(box.value.trim()))));
+      if(!data.progress) throw new Error('bad block');
+      if(data.m && data.m !== SPEC.id){
+        st.className = 'feedback on bad';
+        st.textContent = 'That block is from a different module (' + data.m.toUpperCase() + '). Paste it into that one instead.';
+        return;
+      }
+      PROFILE = Object.assign(PROFILE, data.profile || {});
+      PROGRESS = Object.assign(PROGRESS, data.progress);
+      if(Array.isArray(data.attempts)) ATTEMPTS = data.attempts;
+      await saveProfile(); await saveAttempts(); await saveProgress();
+      box.classList.remove('on'); el.querySelector('#impActions').style.display = 'none';
+      ['v-brief'].forEach(id => { const v = document.getElementById(id); if(v) delete v.dataset.built; });
+      activeScen = null; quizLive = false;
+      RENDER.records(); paintProgress();
+      const st2 = document.getElementById('impStatus');
+      st2.className = 'feedback on good';
+      st2.textContent = 'Restored. Sections, scores, and any paused attempt are back where they were.';
+    }catch(e){
+      st.className = 'feedback on bad';
+      st.textContent = "That block didn't read as progress data. Copy the whole thing, including the very end.";
+    }
+  };
+};
+
+/* ============================ BOOT ============================ */
+(async function(){
+  await loadAll();
+  buildHead();
+  buildTabs();
+  const returning = !!(PROGRESS.lastTab && PROGRESS.updatedAt);
+  go(returning ? PROGRESS.lastTab : 'brief');
+  if(returning) showResume();
+  setInterval(paintSaved, 60000);
+})();
+</script>
